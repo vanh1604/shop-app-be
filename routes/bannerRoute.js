@@ -1,6 +1,5 @@
-import express from 'express';
-import { createBanner, getBanner } from '../controller/bannerController.js';
-
+import express from "express";
+import { createBanner, getBanner } from "../controller/bannerController.js";
 
 const bannerRouter = express.Router();
 
