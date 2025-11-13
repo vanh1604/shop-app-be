@@ -34,7 +34,7 @@ const signIn = async (req, res) => {
         const { password, ...userWithoutPassword } = findUser._doc;
         return res.json({
           message: "Login successfully",
-          data: userWithoutPassword,
+          user: userWithoutPassword,
           token: token,
         });
       }
