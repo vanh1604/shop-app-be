@@ -27,6 +27,14 @@ const productSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  vendorId: {
+    type: String,
+    required: true,
+  },
+  fullName: {
+    type: String,
+    required: true,
+  },
   subCategory: {
     type: String,
     required: true,
