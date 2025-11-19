@@ -37,7 +37,7 @@ const getProductPopular = async (req, res) => {
     if (!products || products.length === 0) {
       return res.status(404).json({ message: "Products not found" });
     }
-    res.status(200).json({ products });
+    res.status(200).json(products);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
