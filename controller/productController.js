@@ -64,4 +64,37 @@ const getProduct = async (req, res) => {
   }
 };
 
-export { createProduct, getProduct, getProductPopular, getRecommendProduct };
+const getProductByCategory = async (req, res) => {
+  const { category } = req.params;
+  try {
+    const products = await Product.find({ category, popular: true });
+    if (!products || products.length === 0) {
+      return res.status(404).json({ message: "Products not found" });
+    }
+    res.status(200).json(products);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getProductById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    res.status(200).json(product);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export {
+  createProduct,
+  getProduct,
+  getProductPopular,
+  getRecommendProduct,
+  getProductByCategory,
+  getProductById,
+};
