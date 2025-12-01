@@ -8,6 +8,7 @@ import subCategoryRouter from "./routes/sub_categoryRoute.js";
 import productRouter from "./routes/productRoute.js";
 import productReviewRouter from "./routes/productReviewRoute.js";
 import vendorRouter from "./routes/vendorRoute.js";
+import orderRouter from "./routes/orderRoute.js";
 
 const PORT = 3000;
 const app = express();
@@ -24,6 +25,7 @@ app.use(subCategoryRouter);
 app.use(productRouter);
 app.use(productReviewRouter);
 app.use(vendorRouter);
+app.use(orderRouter);
 
 // Kết nối đến Database
 connectDB();
