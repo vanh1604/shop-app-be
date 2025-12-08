@@ -16,6 +16,7 @@ const createOrder = async (req, res) => {
       image,
       buyerId,
       vendorId,
+      delivered,
     } = new Order(req.body);
     const createAt = new Date().getMilliseconds();
     const order = new Order({
@@ -31,6 +32,7 @@ const createOrder = async (req, res) => {
       image,
       buyerId,
       vendorId,
+      delivered,
       createAt,
     });
     await order.save();

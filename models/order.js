@@ -57,12 +57,8 @@ const orderSchema = mongoose.Schema({
   delivered:{
     type: Boolean,
     required: true,
+  },
   
-  },
-  createdAt: {
-    type: Number,
-    required: true,
-  },
 });
 const Order = mongoose.model("Order", orderSchema);
 export default Order;
