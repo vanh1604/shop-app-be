@@ -44,18 +44,27 @@ const createOrder = async (req, res) => {
   }
 };
 
-const getOrdersByBuyer = async () => {
+const getOrdersByBuyer = async (req, res) => {
   const buyerId = req.params.buyerId;
   try {
     const orders = await Order.find({ buyerId: buyerId });
-    if (orders.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No orders found for this buyer" });
-    }
+
     return res.status(200).json({ orders });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-export { createOrder, getOrdersByBuyer };
+
+const deleteOrderById = async (req, res) => {
+  const orderId = req.params.orderId;
+  try {
+    const order = await Order.findByIdAndDelete(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    return res.status(200).json({ message: "Order deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+export { createOrder, getOrdersByBuyer, deleteOrderById };
