@@ -49,16 +49,16 @@ const orderSchema = mongoose.Schema({
     type: String,
     required: true,
   },
-  processing:{
+  processing: {
     type: Boolean,
     required: true,
     default: true,
   },
-  delivered:{
+  delivered: {
     type: Boolean,
     required: true,
+    default: false,
   },
-  
 });
 const Order = mongoose.model("Order", orderSchema);
 export default Order;
