@@ -5,7 +5,7 @@ const ProductReviewSchema = mongoose.Schema({
     type: String,
     required: true,
   },
-  userId: {
+  buyerId: {
     type: String,
     required: true,
   },

@@ -45,10 +45,9 @@ const createOrder = async (req, res) => {
 };
 
 const getOrdersByBuyer = async (req, res) => {
-  const buyerId = req.params.buyerId;
   try {
+    const buyerId = req.params.buyerId;
     const orders = await Order.find({ buyerId: buyerId });
-
     return res.status(200).json({ orders });
   } catch (error) {
     res.status(500).json({ error: error.message });
