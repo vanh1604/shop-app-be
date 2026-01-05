@@ -48,4 +48,13 @@ const vendorSignIn = async (req, res) => {
   }
 };
 
-export { vendorSignUp, vendorSignIn };
+const getVendors = async (req, res) => {
+  try {
+    const vendors = await Vendor.find().select("-password");
+    res.status(200).json({ vendors });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export { vendorSignUp, vendorSignIn, getVendors };

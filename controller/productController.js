@@ -90,6 +90,41 @@ const getProductById = async (req, res) => {
   }
 };
 
+const relatedProducts = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    } else {
+      const relatedProducts = await Product.find({
+        category: product.category,
+        _id: { $ne: product._id },
+      }).limit(5);
+      if (relatedProducts.length === 0) {
+        return res.status(404).json({ message: "No related products found" });
+      }
+      res.status(200).json({ relatedProducts });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const topRatedProducts = async (req, res) => {
+  try {
+    const topRatedProducts = await Product.find()
+      .sort({ averageRating: -1 })
+      .limit(10);
+    if (!topRatedProducts || topRatedProducts.length === 0) {
+      return res.status(404).json({ message: "Products not found" });
+    }
+    res.status(200).json({ topRatedProducts });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export {
   createProduct,
   getProduct,
@@ -97,4 +132,6 @@ export {
   getRecommendProduct,
   getProductByCategory,
   getProductById,
+  relatedProducts,
+  topRatedProducts,
 };

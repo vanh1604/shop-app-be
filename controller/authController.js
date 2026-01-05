@@ -1,5 +1,7 @@
 import User from "../models/user.js";
 import bcrypt from "bcryptjs";
+import dotenv from "dotenv";
+dotenv.config();
 import jwt from "jsonwebtoken";
 const signUp = async (req, res) => {
   try {
@@ -30,7 +32,7 @@ const signIn = async (req, res) => {
       if (!isMatched) {
         return res.status(400).json({ message: "Incorrect Password" });
       } else {
-        const token = jwt.sign({ id: findUser._id }, "PasswordKey");
+        const token = jwt.sign({ id: findUser._id }, process.env.JWT_SECRET);
         const { password, ...userWithoutPassword } = findUser._doc;
         return res.json({
           message: "Login successfully",
@@ -64,4 +66,13 @@ const updateLocation = async (req, res) => {
   }
 };
 
-export { signUp, signIn, updateLocation };
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("-password");
+    res.status(200).json({ users });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export { signUp, signIn, updateLocation, getAllUsers };
