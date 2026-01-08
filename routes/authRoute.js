@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getAllUsers,
+  getUserinformation,
   signIn,
   signUp,
   updateLocation,
@@ -14,4 +15,5 @@ authRouter.post("/api/signin", signIn);
 authRouter.put("/api/users/:id", updateLocation);
 authRouter.get("/api/orders/:vendorId", getOrderByVendorId);
 authRouter.get("/api/users", getAllUsers);
+authRouter.get("/api/userInfo/:id", getUserinformation);
 export default authRouter;

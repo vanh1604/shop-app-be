@@ -125,6 +125,37 @@ const topRatedProducts = async (req, res) => {
   }
 };
 
+const getProductBySubcategory = async (req, res) => {
+  const { subCategory } = req.params;
+  try {
+    const products = await Product.find({ subCategory });
+    if (!products || products.length === 0) {
+      return res.status(404).json({ message: "Products not found" });
+    }
+    res.status(200).json({ products });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const searchProducts = async (req, res) => {
+  const { query } = req.query;
+  try {
+    const products = await Product.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { description: { $regex: query, $options: "i" } },
+      ],
+    });
+    if (!products || products.length === 0) {
+      return res.status(404).json({ message: "Products not found" });
+    }
+    res.status(200).json(products);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export {
   createProduct,
   getProduct,
@@ -134,4 +165,6 @@ export {
   getProductById,
   relatedProducts,
   topRatedProducts,
+  getProductBySubcategory,
+  searchProducts,
 };

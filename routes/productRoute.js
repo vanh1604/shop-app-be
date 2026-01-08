@@ -4,9 +4,11 @@ import {
   getProduct,
   getProductByCategory,
   getProductById,
+  getProductBySubcategory,
   getProductPopular,
   getRecommendProduct,
   relatedProducts,
+  searchProducts,
   topRatedProducts,
 } from "../controller/productController.js";
 import { auth, vendorAuth } from "../middleware/auth.js";
@@ -20,4 +22,9 @@ productRouter.get("/api/getproductByCategory/:category", getProductByCategory);
 productRouter.get("/api/getproductById/:id", getProductById);
 productRouter.get("/api/relatedproducts/:id", relatedProducts);
 productRouter.get("/api/topratedproducts", topRatedProducts);
+productRouter.get(
+  "/api/products/subcategory/:subCategory",
+  getProductBySubcategory
+);
+productRouter.get("/api/products/search", searchProducts);
 export default productRouter;
