@@ -1,5 +1,7 @@
 import Order from "../models/order.js";
-
+import Stripe from "stripe";
+import dotenv from "dotenv";
+dotenv.config();
 const createOrder = async (req, res) => {
   try {
     // Logic to create an order
@@ -119,6 +121,39 @@ const getAllOrders = async (req, res) => {
   }
 };
 
+const paymentApi = async (req, res) => {
+  try {
+    const { orderId, paymentMethodId, currency = "usd" } = req.body;
+    if (!orderId || !paymentMethodId) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const totalPrice = order.productPrice * order.quantity;
+    const amount = Math.round(totalPrice * 100); // Convert to cents
+    const stripe = new Stripe(process.env.STRIPE_KEY);
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount,
+      currency: currency,
+      description: "E-commerce Payment",
+      payment_method: paymentMethodId,
+      automatic_payment_methods: { enabled: true },
+    });
+    res.status(200).json({
+      message: "Payment successful",
+      paymentIntent: paymentIntent.id,
+      amount: paymentIntent.amount / 100,
+      currency: paymentIntent.currency,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export {
   createOrder,
   getOrdersByBuyer,
@@ -127,4 +162,5 @@ export {
   updateOrderById,
   updateProccessById,
   getAllOrders,
+  paymentApi,
 };

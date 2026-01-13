@@ -5,6 +5,7 @@ import {
   getAllOrders,
   getOrderByVendorId,
   getOrdersByBuyer,
+  paymentApi,
   updateOrderById,
   updateProccessById,
 } from "../controller/orderController.js";
@@ -26,6 +27,6 @@ orderRouter.get(
 );
 orderRouter.patch("/api/orders/:orderId/delivered", updateOrderById);
 orderRouter.patch("/api/orders/:orderId/processing", updateProccessById);
-
+orderRouter.post("/api/orders/payment", paymentApi);
 orderRouter.get("/api/orders", getAllOrders);
 export default orderRouter;
