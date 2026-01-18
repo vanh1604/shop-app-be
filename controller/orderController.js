@@ -18,6 +18,7 @@ const createOrder = async (req, res) => {
       image,
       buyerId,
       vendorId,
+      processing,
       delivered,
     } = new Order(req.body);
     const createAt = new Date().getMilliseconds();
@@ -35,6 +36,7 @@ const createOrder = async (req, res) => {
       buyerId,
       vendorId,
       delivered,
+      processing,
       createAt,
     });
     await order.save();
@@ -123,8 +125,8 @@ const getAllOrders = async (req, res) => {
 
 const paymentApi = async (req, res) => {
   try {
-    const { orderId, paymentMethodId, currency = "usd" } = req.body;
-    if (!orderId || !paymentMethodId) {
+    const { orderId, currency = "usd" } = req.body;
+    if (!orderId) {
       return res.status(400).json({ message: "Missing required fields" });
     }
     const order = await Order.findById(orderId);
@@ -140,15 +142,26 @@ const paymentApi = async (req, res) => {
       amount: amount,
       currency: currency,
       description: "E-commerce Payment",
-      payment_method: paymentMethodId,
-      automatic_payment_methods: { enabled: true },
+      automatic_payment_methods: {
+        enabled: true,
+      },
     });
     res.status(200).json({
       message: "Payment successful",
+      clientSecret: paymentIntent.client_secret,
       paymentIntent: paymentIntent.id,
       amount: paymentIntent.amount / 100,
       currency: paymentIntent.currency,
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const stripeRetrieve = async (res, req) => {
+  try {
+    const paymentIntent = await stripe.paymentIntents.retrieve(req.params.id);
+    res.status(200).json({ paymentIntent });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -163,4 +176,5 @@ export {
   updateProccessById,
   getAllOrders,
   paymentApi,
+  stripeRetrieve,
 };

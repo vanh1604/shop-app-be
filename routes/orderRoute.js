@@ -6,6 +6,7 @@ import {
   getOrderByVendorId,
   getOrdersByBuyer,
   paymentApi,
+  stripeRetrieve,
   updateOrderById,
   updateProccessById,
 } from "../controller/orderController.js";
@@ -27,6 +28,7 @@ orderRouter.get(
 );
 orderRouter.patch("/api/orders/:orderId/delivered", updateOrderById);
 orderRouter.patch("/api/orders/:orderId/processing", updateProccessById);
-orderRouter.post("/api/orders/payment", paymentApi);
+orderRouter.post("/api/orders/payment", auth, paymentApi);
+orderRouter.get("/api/orders/stripe/retrieve/:id", auth, stripeRetrieve);
 orderRouter.get("/api/orders", getAllOrders);
 export default orderRouter;
