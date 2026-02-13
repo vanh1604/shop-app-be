@@ -1,4 +1,5 @@
 import Product from "../models/product.js";
+import Vendor from "../models/vendor.js";
 
 const createProduct = async (req, res) => {
   const {
@@ -156,6 +157,37 @@ const searchProducts = async (req, res) => {
   }
 };
 
+const getProductByVendorId = async (req, res) => {
+  const { vendorId } = req.params;
+  try {
+    const vendorExist = await Vendor.findById(vendorId);
+    if (!vendorExist) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+    const products = await Product.find({ vendorId });
+    if (!products || products.length === 0) {
+      return res.status(404).json({ message: "Products not found" });
+    }
+    res.status(200).json({ products });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const updatedProduct = async (req, res) => {
+  const { id } = req.params;
+  const updates = req.body;
+  try {
+    const product = await Product.findByIdAndUpdate(id, updates, { new: true });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    res.status(200).json({ product });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export {
   createProduct,
   getProduct,
@@ -167,4 +199,6 @@ export {
   topRatedProducts,
   getProductBySubcategory,
   searchProducts,
+  getProductByVendorId,
+  updatedProduct,
 };

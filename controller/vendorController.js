@@ -3,7 +3,14 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 const vendorSignUp = async (req, res) => {
   try {
-    const { fullName, email, password } = req.body;
+    const {
+      fullName,
+      email,
+      password,
+      storeName,
+      storeImage,
+      storeDescription,
+    } = req.body;
     const existingEmail = await Vendor.findOne({ email });
     if (existingEmail) {
       return res
@@ -12,7 +19,14 @@ const vendorSignUp = async (req, res) => {
     } else {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
-      const vendor = new Vendor({ fullName, email, password: hashedPassword });
+      const vendor = new Vendor({
+        fullName,
+        email,
+        password: hashedPassword,
+        storeName,
+        storeImage,
+        storeDescription,
+      });
       await vendor.save();
       res.json({ vendor });
     }
@@ -57,4 +71,15 @@ const getVendors = async (req, res) => {
   }
 };
 
-export { vendorSignUp, vendorSignIn, getVendors };
+const getAllVendorsStore = async (req, res) => {
+  try {
+    const vendors = await Vendor.find().select(
+      "storeName storeImage storeDescription",
+    );
+    res.status(200).json({ vendors });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export { vendorSignUp, vendorSignIn, getVendors, getAllVendorsStore };

@@ -35,6 +35,18 @@ const vendorSchema = mongoose.Schema({
     type: String,
     default: "vendor",
   },
+  storeName: {
+    type: String,
+    required: true,
+  },
+  storeImage: {
+    type: String,
+    required: true,
+  },
+  storeDescription: {
+    type: String,
+    required: true,
+  },
   password: {
     type: String,
     required: true,
@@ -44,6 +56,10 @@ const vendorSchema = mongoose.Schema({
       },
       message: "Password must be least 8 characters long",
     },
+  },
+  refreshToken: {
+    type: String,
+    default: null,
   },
 });
 

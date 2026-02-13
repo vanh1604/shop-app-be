@@ -5,6 +5,7 @@ dotenv.config();
 import jwt from "jsonwebtoken";
 import sendEmail, { sendVerificationEmail } from "../helper/send_email.js";
 import crypto from "crypto";
+import Vendor from "../models/vendor.js";
 const otpStore = new Map();
 
 const signUp = async (req, res) => {
@@ -43,25 +44,104 @@ const signIn = async (req, res) => {
   try {
     const { email, password } = req.body;
     const findUser = await User.findOne({ email });
+    if (!findUser) {
+      return res
+        .status(400)
+        .json({ message: "user not found with this email" });
+    }
     if (!findUser.isVerified) {
       return res.status(400).json({ message: "Please verify your email" });
     }
-    if (findUser) {
-      const isMatched = await bcrypt.compare(password, findUser.password);
-      if (!isMatched) {
-        return res.status(400).json({ message: "Incorrect Password" });
-      } else {
-        const token = jwt.sign({ id: findUser._id }, process.env.JWT_SECRET);
-        const { password, ...userWithoutPassword } = findUser._doc;
-        return res.json({
-          message: "Login successfully",
-          user: userWithoutPassword,
-          token: token,
-        });
-      }
-    } else {
-      return res.status(400).json({ message: "user not found with this emal" });
+    const isMatched = await bcrypt.compare(password, findUser.password);
+    if (!isMatched) {
+      return res.status(400).json({ message: "Incorrect Password" });
     }
+
+    // Generate access token (short-lived: 15 minutes)
+    const accessToken = jwt.sign({ id: findUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "15m",
+    });
+
+    // Generate refresh token (long-lived: 7 days)
+    const refreshToken = jwt.sign(
+      { id: findUser._id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    // Save refresh token to database (replaces old token)
+    findUser.refreshToken = refreshToken;
+    await findUser.save();
+
+    const {
+      password: _,
+      refreshToken: __,
+      ...userWithoutPassword
+    } = findUser._doc;
+    return res.json({
+      message: "Login successfully",
+      user: userWithoutPassword,
+      accessToken,
+      refreshToken,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const refreshAccessToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(401).json({ message: "Refresh token is required" });
+    }
+
+    // Verify refresh token
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    } catch (error) {
+      return res
+        .status(401)
+        .json({ message: "Invalid or expired refresh token" });
+    }
+
+    // Find user and check if refresh token exists in database
+    const user =
+      (await User.findById(decoded.id)) || (await Vendor.findById(decoded.id));
+
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    if (user.refreshToken !== refreshToken) {
+      return res
+        .status(401)
+        .json({ message: "Refresh token not found or has been revoked" });
+    }
+
+    // Generate new access token
+    const newAccessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "15m",
+    });
+
+    // Implement refresh token rotation (generate new refresh token)
+    const newRefreshToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    // Replace old refresh token with new one
+    user.refreshToken = newRefreshToken;
+    await user.save();
+
+    return res.json({
+      message: "Token refreshed successfully",
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -141,11 +221,62 @@ const verifyOtp = async (req, res) => {
   }
 };
 
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    const vendor = await Vendor.findById(id);
+    if (!user && !vendor) {
+      return res.status(404).json({ message: "User or Vendor not found" });
+    }
+    if (user) {
+      await User.findByIdAndDelete(id);
+    } else {
+      await Vendor.findByIdAndDelete(id);
+    }
+    return res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({ message: "Refresh token is required" });
+    }
+
+    // Decode to get user ID (without verification since token might be expired)
+    const decoded = jwt.decode(refreshToken);
+    if (!decoded || !decoded.id) {
+      return res.status(400).json({ message: "Invalid refresh token" });
+    }
+
+    // Find user and remove refresh token
+    const user =
+      (await User.findById(decoded.id)) || (await Vendor.findById(decoded.id));
+
+    if (user) {
+      user.refreshToken = null;
+      await user.save();
+    }
+
+    return res.json({ message: "Logged out successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export {
   signUp,
   signIn,
+  refreshAccessToken,
+  logout,
   updateLocation,
   getAllUsers,
   getUserinformation,
   verifyOtp,
+  deleteUser,
 };
