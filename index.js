@@ -9,6 +9,9 @@ import productRouter from "./routes/productRoute.js";
 import productReviewRouter from "./routes/productReviewRoute.js";
 import vendorRouter from "./routes/vendorRoute.js";
 import orderRouter from "./routes/orderRoute.js";
+import chatRouter from "./routes/chatRoutes.js";
+import notificationRouter from "./routes/notificationRoute.js";
+import { initializeFirebase } from "./config/firebaseConfig.js";
 
 const PORT = 3000;
 const app = express();
@@ -29,9 +32,14 @@ app.use(productRouter);
 app.use(productReviewRouter);
 app.use(vendorRouter);
 app.use(orderRouter);
+app.use(chatRouter);
+app.use(notificationRouter);
 
 // Kết nối đến Database
 connectDB();
+
+// Khởi tạo Firebase Admin SDK
+initializeFirebase();
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server is running on port ${PORT}`);
 });

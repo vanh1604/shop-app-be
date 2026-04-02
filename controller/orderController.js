@@ -1,6 +1,9 @@
 import Order from "../models/order.js";
+import User from "../models/user.js";
+import Vendor from "../models/vendor.js";
 import Stripe from "stripe";
 import dotenv from "dotenv";
+import { sendToTokens } from "../services/notificationService.js";
 dotenv.config();
 const createOrder = async (req, res) => {
   try {
@@ -20,8 +23,9 @@ const createOrder = async (req, res) => {
       vendorId,
       processing,
       delivered,
-    } = new Order(req.body);
-    const createAt = new Date().getMilliseconds();
+      selectedSize,
+      variantId,
+    } = req.body;
     const order = new Order({
       fullName,
       email,
@@ -37,9 +41,36 @@ const createOrder = async (req, res) => {
       vendorId,
       delivered,
       processing,
-      createAt,
+      ...(selectedSize && { selectedSize }),
+      ...(variantId && { variantId }),
     });
     await order.save();
+
+    // Notify vendor about the new order (fire-and-forget)
+    if (vendorId) {
+      Vendor.findById(vendorId)
+        .select('fcmTokens')
+        .then((vendor) => {
+          if (vendor?.fcmTokens?.length > 0) {
+            sendToTokens(
+              vendor.fcmTokens,
+              {
+                title: '📦 Đơn hàng mới!',
+                body: `Bạn có đơn hàng mới cho '${productName}'`,
+              },
+              { type: 'new_order', orderId: order._id.toString() }
+            ).then((invalidTokens) => {
+              if (invalidTokens.length > 0) {
+                Vendor.findByIdAndUpdate(vendorId, {
+                  $pull: { fcmTokens: { $in: invalidTokens } },
+                }).exec();
+              }
+            });
+          }
+        })
+        .catch((e) => console.error('[FCM] createOrder notify error:', e.message));
+    }
+
     return res
       .status(201)
       .json({ message: "Order created successfully", order });
@@ -80,6 +111,32 @@ const updateOrderById = async (req, res) => {
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
+
+    // Notify buyer that order has been delivered (fire-and-forget)
+    if (order.buyerId) {
+      User.findById(order.buyerId)
+        .select('fcmTokens')
+        .then((buyer) => {
+          if (buyer?.fcmTokens?.length > 0) {
+            sendToTokens(
+              buyer.fcmTokens,
+              {
+                title: '✅ Đơn hàng đã giao!',
+                body: `Đơn hàng '${order.productName}' đã được giao thành công`,
+              },
+              { type: 'order_update', orderId: orderId, status: 'delivered' }
+            ).then((invalidTokens) => {
+              if (invalidTokens.length > 0) {
+                User.findByIdAndUpdate(order.buyerId, {
+                  $pull: { fcmTokens: { $in: invalidTokens } },
+                }).exec();
+              }
+            });
+          }
+        })
+        .catch((e) => console.error('[FCM] updateDelivered notify error:', e.message));
+    }
+
     return res.status(200).json({ order });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -95,6 +152,32 @@ const updateProccessById = async (req, res) => {
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
+
+    // Notify buyer that order is being processed (fire-and-forget)
+    if (order.buyerId) {
+      User.findById(order.buyerId)
+        .select('fcmTokens')
+        .then((buyer) => {
+          if (buyer?.fcmTokens?.length > 0) {
+            sendToTokens(
+              buyer.fcmTokens,
+              {
+                title: '🚚 Cập nhật đơn hàng',
+                body: `Đơn hàng '${order.productName}' đang được xử lý`,
+              },
+              { type: 'order_update', orderId: orderId, status: 'processing' }
+            ).then((invalidTokens) => {
+              if (invalidTokens.length > 0) {
+                User.findByIdAndUpdate(order.buyerId, {
+                  $pull: { fcmTokens: { $in: invalidTokens } },
+                }).exec();
+              }
+            });
+          }
+        })
+        .catch((e) => console.error('[FCM] updateProcess notify error:', e.message));
+    }
+
     return res.status(200).json({ order });
   } catch (error) {
     res.status(500).json({ error: error.message });

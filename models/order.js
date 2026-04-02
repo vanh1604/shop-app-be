@@ -59,6 +59,16 @@ const orderSchema = mongoose.Schema({
     required: true,
     default: false,
   },
+  orderedAt: {
+    type: Date,
+    default: Date.now,
+  },
+  selectedSize: {
+    type: String,
+  },
+  variantId: {
+    type: String,
+  },
 });
 const Order = mongoose.model("Order", orderSchema);
 export default Order;

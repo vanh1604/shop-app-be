@@ -61,6 +61,10 @@ const vendorSchema = mongoose.Schema({
     type: String,
     default: null,
   },
+  fcmTokens: {
+    type: [String],
+    default: [],
+  },
 });
 
 const Vendor = mongoose.model("Vendor", vendorSchema);

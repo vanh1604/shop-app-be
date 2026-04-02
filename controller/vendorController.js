@@ -1,6 +1,7 @@
 import Vendor from "../models/vendor.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { sendToTopic } from "../services/notificationService.js";
 const vendorSignUp = async (req, res) => {
   try {
     const {
@@ -28,6 +29,17 @@ const vendorSignUp = async (req, res) => {
         storeDescription,
       });
       await vendor.save();
+
+      // Notify all customers about the new store (fire-and-forget)
+      sendToTopic(
+        'all_users',
+        {
+          title: '🏪 Cửa hàng mới!',
+          body: `'${storeName}' vừa tham gia nền tảng`,
+        },
+        { type: 'new_store', vendorId: vendor._id.toString() }
+      ).catch((e) => console.error('[FCM] vendorSignUp notify error:', e.message));
+
       res.json({ vendor });
     }
   } catch (error) {

@@ -1,5 +1,6 @@
 import Product from "../models/product.js";
 import Vendor from "../models/vendor.js";
+import { sendToTopic } from "../services/notificationService.js";
 
 const createProduct = async (req, res) => {
   const {
@@ -12,8 +13,10 @@ const createProduct = async (req, res) => {
     images,
     category,
     subCategory,
+    variants,
   } = req.body;
   try {
+    console.log('[createProduct] variants received:', JSON.stringify(variants));
     const product = new Product({
       name,
       price,
@@ -24,8 +27,20 @@ const createProduct = async (req, res) => {
       subCategory,
       vendorId,
       fullName,
+      variants: variants || [],
     });
     await product.save();
+
+    // Notify all customers about the new product (fire-and-forget)
+    sendToTopic(
+      'all_users',
+      {
+        title: '🛍️ Sản phẩm mới!',
+        body: `'${name}' vừa được thêm vào ${category}`,
+      },
+      { type: 'new_product', productId: product._id.toString(), vendorId: vendorId || '' }
+    ).catch((e) => console.error('[FCM] createProduct notify error:', e.message));
+
     res.status(201).json({ product });
   } catch (error) {
     res.status(500).json({ error: error.message });

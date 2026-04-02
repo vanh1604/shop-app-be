@@ -1,5 +1,12 @@
 import mongoose from "mongoose";
 
+const productVariantSchema = new mongoose.Schema({
+  size: { type: String, required: true },
+  color: { type: String },
+  price: { type: Number, required: true },
+  quantity: { type: Number, required: true, default: 0 },
+});
+
 const productSchema = mongoose.Schema({
   name: {
     type: String,
@@ -54,6 +61,10 @@ const productSchema = mongoose.Schema({
   totalRatings: {
     type: Number,
     default: 0,
+  },
+  variants: {
+    type: [productVariantSchema],
+    default: [],
   },
 });
 
