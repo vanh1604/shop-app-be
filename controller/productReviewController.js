@@ -4,15 +4,6 @@ import ProductReview from "../models/product_review.js";
 const createReviewProduct = async (req, res) => {
   try {
     const { productId, buyerId, rating, review, email, fullName } = req.body;
-    const productReview = new ProductReview({
-      productId,
-      buyerId,
-      email,
-      fullName,
-      rating,
-      review,
-    });
-    await productReview.save();
 
     const existingReview = await ProductReview.findOne({
       productId,
@@ -23,6 +14,16 @@ const createReviewProduct = async (req, res) => {
         .status(400)
         .json({ message: "You have already reviewed this product" });
     }
+
+    const productReview = new ProductReview({
+      productId,
+      buyerId,
+      email,
+      fullName,
+      rating,
+      review,
+    });
+    await productReview.save();
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });

@@ -9,15 +9,23 @@ const orderSchema = mongoose.Schema({
     type: String,
     required: true,
   },
-  state: {
+  province: {
     type: String,
     required: true,
   },
-  city: {
+  district: {
     type: String,
     required: true,
   },
-  locality: {
+  ward: {
+    type: String,
+    required: true,
+  },
+  address: {
+    type: String,
+    required: true,
+  },
+  productId: {
     type: String,
     required: true,
   },

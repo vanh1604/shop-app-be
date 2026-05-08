@@ -1,5 +1,6 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import { configDotenv } from "dotenv";
+
 configDotenv();
 
 const sesClient = new SESClient({
@@ -11,7 +12,7 @@ const sesClient = new SESClient({
   },
 });
 
-const generateEmailBody = (content, title = "Welcome") => {
+const generateEmailBody = (content, title) => {
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -34,7 +35,7 @@ const generateEmailBody = (content, title = "Welcome") => {
             background-color: #ffffff;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
           }
           .email-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -49,10 +50,8 @@ const generateEmailBody = (content, title = "Welcome") => {
           }
           .email-body {
             padding: 40px 30px;
-            height: auto;
           }
           .email-body h2 {
-          
             color: #333;
             font-size: 22px;
             margin-top: 0;
@@ -61,19 +60,16 @@ const generateEmailBody = (content, title = "Welcome") => {
             margin: 15px 0;
             font-size: 16px;
           }
-          .button {
-            display: inline-block;
-            padding: 12px 30px;
+          .info-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
             margin: 20px 0;
-            background-color: #667eea;
-            color: #ffffff !important;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: 600;
-            transition: background-color 0.3s;
           }
-          .button:hover {
-            background-color: #5568d3;
+          .divider {
+            height: 1px;
+            background-color: #e0e0e0;
+            margin: 30px 0;
           }
           .email-footer {
             background-color: #f8f9fa;
@@ -85,17 +81,6 @@ const generateEmailBody = (content, title = "Welcome") => {
           }
           .email-footer p {
             margin: 5px 0;
-          }
-          .divider {
-            height: 1px;
-            background-color: #e0e0e0;
-            margin: 30px 0;
-          }
-          .info-box {
-            background-color: #f8f9fa;
-            border-left: 4px solid #667eea;
-            padding: 15px;
-            margin: 20px 0;
           }
           @media only screen and (max-width: 600px) {
             .email-container {
@@ -125,118 +110,25 @@ const generateEmailBody = (content, title = "Welcome") => {
   `;
 };
 
-// Template Examples
-export const emailTemplates = {
-  welcome: (username) => ({
-    subject: `Welcome to ${process.env.APP_NAME}!`,
-    content: `
-      <h2>Hello ${username}!</h2>
-      <p>Thank you for joining ${process.env.APP_NAME}. We're excited to have you on board!</p>
-      <p>Get started by exploring our products and services.</p>
-      <a href="${process.env.APP_URL || "#"}" class="button">Start Shopping</a>
-      <div class="divider"></div>
-      <p>If you have any questions, feel free to reach out to our support team.</p>
-    `,
-  }),
-
-  orderConfirmation: (orderDetails) => ({
-    subject: `Order Confirmation - #${orderDetails.orderId}`,
-    content: `
-      <h2>Thank You for Your Order!</h2>
-      <p>Hi ${orderDetails.customerName},</p>
-      <p>Your order has been confirmed and will be shipped soon.</p>
-
-      <div class="info-box">
-        <strong>Order Details:</strong><br>
-        Order ID: <strong>#${orderDetails.orderId}</strong><br>
-        Order Date: ${orderDetails.orderDate}<br>
-        Total Amount: <strong>$${orderDetails.totalAmount}</strong>
-      </div>
-
-      <h3>Items Ordered:</h3>
-      ${orderDetails.items
-        .map(
-          (item) => `
-        <p>• ${item.name} (x${item.quantity}) - $${item.price}</p>
-      `,
-        )
-        .join("")}
-
-      <div class="divider"></div>
-      <p>You can track your order status by clicking the button below:</p>
-      <a href="${process.env.APP_URL}/orders/${orderDetails.orderId}" class="button">Track Order</a>
-    `,
-  }),
-
-  orderShipped: (shippingDetails) => ({
-    subject: `Your Order Has Been Shipped! - #${shippingDetails.orderId}`,
-    content: `
-      <h2>Great News! Your Order is On Its Way</h2>
-      <p>Hi ${shippingDetails.customerName},</p>
-      <p>Your order has been shipped and is on its way to you!</p>
-
-      <div class="info-box">
-        <strong>Shipping Information:</strong><br>
-        Order ID: <strong>#${shippingDetails.orderId}</strong><br>
-        Tracking Number: <strong>${shippingDetails.trackingNumber}</strong><br>
-        Estimated Delivery: ${shippingDetails.estimatedDelivery}
-      </div>
-
-      <a href="${shippingDetails.trackingUrl || "#"}" class="button">Track Your Package</a>
-
-      <div class="divider"></div>
-      <p>Thank you for shopping with us!</p>
-    `,
-  }),
-
-  passwordReset: (resetToken, username) => ({
-    subject: "Reset Your Password",
-    content: `
-      <h2>Password Reset Request</h2>
-      <p>Hi ${username},</p>
-      <p>We received a request to reset your password. Click the button below to create a new password:</p>
-
-      <a href="${process.env.APP_URL}/reset-password?token=${resetToken}" class="button">Reset Password</a>
-
-      <div class="info-box">
-        <strong>Note:</strong> This link will expire in 1 hour for security reasons.
-      </div>
-
-      <div class="divider"></div>
-      <p>If you didn't request a password reset, please ignore this email or contact support if you have concerns.</p>
-    `,
-  }),
-
-  accountVerification: (username, otp) => ({
+const buildVerificationEmail = (username, otp) => {
+  return {
     subject: "Verify Your Email Address",
     content: `
       <h2>Verify Your Email</h2>
       <p>Hi ${username},</p>
-      <p>Thank you for registering! Please verify your email address to activate your account.</p>
+      <p>Please use the OTP below to complete your account verification.</p>
       <div class="info-box">
-        <strong>Note:</strong> This verification link will expire in 24 hours.
+        <p><strong>Your OTP:</strong> ${otp}</p>
+        <p><strong>Expires in:</strong> 10 minutes</p>
       </div>
-      <div class="divider">
-      <p>Your One-Time password (OTP) for email verification is:</p>
-      <p><strong>${otp}</strong></p>
-      <p><strong>Note:</strong> This OTP will expire in 10 minutes.</p>
-      <p><strong>Note:</strong> Do not share this OTP with anyone.</p>
-      <p><strong>Note:</strong> If you didn't create an account, please ignore this email.</p>
-      </div>
-
       <div class="divider"></div>
-      <p>If you didn't create an account, please ignore this email.</p>
+      <p>Do not share this OTP with anyone.</p>
+      <p>If you did not create this account, you can ignore this email.</p>
     `,
-  }),
+  };
 };
 
-export const sendEmail = async (to, subject, htmlContent, options = {}) => {
-  const { title = subject, useTemplate = true } = options;
-
-  const finalBody = useTemplate
-    ? generateEmailBody(htmlContent, title)
-    : htmlContent;
-
+const sendEmail = async (to, subject, htmlContent) => {
   const params = {
     Destination: {
       ToAddresses: Array.isArray(to) ? to : [to],
@@ -245,7 +137,7 @@ export const sendEmail = async (to, subject, htmlContent, options = {}) => {
       Body: {
         Html: {
           Charset: "UTF-8",
-          Data: finalBody,
+          Data: generateEmailBody(htmlContent, subject),
         },
       },
       Subject: {
@@ -267,41 +159,7 @@ export const sendEmail = async (to, subject, htmlContent, options = {}) => {
   }
 };
 
-// Helper functions for common email types
-export const sendWelcomeEmail = async (to, username) => {
-  const { subject, content } = emailTemplates.welcome(username);
+export const sendVerificationEmail = async (to, username, otp) => {
+  const { subject, content } = buildVerificationEmail(username, otp);
   return sendEmail(to, subject, content);
 };
-
-export const sendOrderConfirmationEmail = async (to, orderDetails) => {
-  const { subject, content } = emailTemplates.orderConfirmation(orderDetails);
-  return sendEmail(to, subject, content);
-};
-
-export const sendOrderShippedEmail = async (to, shippingDetails) => {
-  const { subject, content } = emailTemplates.orderShipped(shippingDetails);
-  return sendEmail(to, subject, content);
-};
-
-export const sendPasswordResetEmail = async (to, resetToken, username) => {
-  const { subject, content } = emailTemplates.passwordReset(
-    resetToken,
-    username,
-  );
-  return sendEmail(to, subject, content);
-};
-
-export const sendVerificationEmail = async (
-  to,
-
-  username,
-  otp,
-) => {
-  const { subject, content } = emailTemplates.accountVerification(
-    username,
-    otp,
-  );
-  return sendEmail(to, subject, content);
-};
-
-export default sendEmail;

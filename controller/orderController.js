@@ -1,6 +1,7 @@
 import Order from "../models/order.js";
 import User from "../models/user.js";
 import Vendor from "../models/vendor.js";
+import Product from "../models/product.js";
 import Stripe from "stripe";
 import dotenv from "dotenv";
 import { sendToTokens } from "../services/notificationService.js";
@@ -11,9 +12,11 @@ const createOrder = async (req, res) => {
     const {
       fullName,
       email,
-      state,
-      city,
-      locality,
+      province,
+      district,
+      ward,
+      address,
+      productId,
       productName,
       productPrice,
       quantity,
@@ -26,12 +29,38 @@ const createOrder = async (req, res) => {
       selectedSize,
       variantId,
     } = req.body;
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    if (variantId) {
+      const variant = product.variants.find(v => v._id.toString() === variantId);
+      if (!variant) {
+        return res.status(404).json({ message: "Variant not found" });
+      }
+      if (variant.quantity < quantity) {
+        return res.status(400).json({ message: "Product variant is out of stock" });
+      }
+      variant.quantity -= quantity;
+    } else {
+      if (product.quantity < quantity) {
+        return res.status(400).json({ message: "Product is out of stock" });
+      }
+    }
+    
+    product.quantity -= quantity;
+    await product.save();
+
     const order = new Order({
       fullName,
       email,
-      state,
-      city,
-      locality,
+      province,
+      district,
+      ward,
+      address,
+      productId,
       productName,
       productPrice,
       quantity,
@@ -208,17 +237,23 @@ const getAllOrders = async (req, res) => {
 
 const paymentApi = async (req, res) => {
   try {
-    const { orderId, currency = "usd" } = req.body;
-    if (!orderId) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
-    const order = await Order.findById(orderId);
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+    const { orderId, currency = "usd", amount: bodyAmount } = req.body;
+    
+    let amount;
+    if (bodyAmount) {
+      amount = bodyAmount;
+    } else {
+      if (!orderId) {
+        return res.status(400).json({ message: "Missing required fields (orderId or amount)" });
+      }
+      const order = await Order.findById(orderId);
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+      const totalPrice = order.productPrice * order.quantity;
+      amount = Math.round(totalPrice * 100); // Convert to cents
     }
 
-    const totalPrice = order.productPrice * order.quantity;
-    const amount = Math.round(totalPrice * 100); // Convert to cents
     const stripe = new Stripe(process.env.STRIPE_KEY);
 
     const paymentIntent = await stripe.paymentIntents.create({
@@ -229,14 +264,16 @@ const paymentApi = async (req, res) => {
         enabled: true,
       },
     });
+
     res.status(200).json({
-      message: "Payment successful",
+      message: "Payment intent created successfully",
       clientSecret: paymentIntent.client_secret,
       paymentIntent: paymentIntent.id,
       amount: paymentIntent.amount / 100,
       currency: paymentIntent.currency,
     });
   } catch (error) {
+    console.error("Stripe Payment Intent Error:", error);
     res.status(500).json({ error: error.message });
   }
 };

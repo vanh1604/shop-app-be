@@ -3,8 +3,7 @@ import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 dotenv.config();
 import jwt from "jsonwebtoken";
-import sendEmail, { sendVerificationEmail } from "../helper/send_email.js";
-import crypto from "crypto";
+import { sendVerificationEmail } from "../helper/send_email.js";
 import Vendor from "../models/vendor.js";
 const otpStore = new Map();
 
@@ -150,16 +149,46 @@ const refreshAccessToken = async (req, res) => {
 const updateLocation = async (req, res) => {
   try {
     const { id } = req.params;
-    const { state, city, locality } = req.body;
+    const { province, district, ward, address } = req.body;
     const updatedUser = await User.findByIdAndUpdate(
       id,
-      { state, city, locality },
+      { 
+        $set: { province, district, ward, address },
+        $unset: { state: "", city: "", locality: "" } 
+      },
       { new: true },
     );
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
     return res.status(200).json({ updatedUser });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const updateUserProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { fullName, province, district, ward, address } = req.body;
+
+    // Only update fields that are provided
+    const updateData = { $set: {}, $unset: { state: "", city: "", locality: "" } };
+    if (fullName !== undefined) updateData.$set.fullName = fullName;
+    if (province !== undefined) updateData.$set.province = province;
+    if (district !== undefined) updateData.$set.district = district;
+    if (ward !== undefined) updateData.$set.ward = ward;
+    if (address !== undefined) updateData.$set.address = address;
+
+    const updatedUser = await User.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    }).select("-password"); // Exclude password from the response
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    return res.status(200).json({ user: updatedUser });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -275,6 +304,7 @@ export {
   refreshAccessToken,
   logout,
   updateLocation,
+  updateUserProfile,
   getAllUsers,
   getUserinformation,
   verifyOtp,

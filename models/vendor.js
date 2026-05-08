@@ -19,15 +19,19 @@ const vendorSchema = mongoose.Schema({
       message: "Please enter a valid email address",
     },
   },
-  state: {
+  province: {
     type: String,
     default: "",
   },
-  city: {
+  district: {
     type: String,
     default: "",
   },
-  locality: {
+  ward: {
+    type: String,
+    default: "",
+  },
+  address: {
     type: String,
     default: "",
   },

@@ -193,10 +193,25 @@ const updatedProduct = async (req, res) => {
   const { id } = req.params;
   const updates = req.body;
   try {
-    const product = await Product.findByIdAndUpdate(id, updates, { new: true });
-    if (!product) {
+    const existingProduct = await Product.findById(id);
+    if (!existingProduct) {
       return res.status(404).json({ message: "Product not found" });
     }
+
+    const newQuantity = updates.quantity !== undefined ? updates.quantity : existingProduct.quantity;
+    const newVariants = updates.variants !== undefined ? updates.variants : existingProduct.variants;
+
+    if (newVariants && newVariants.length > 0) {
+      const totalVariantsQuantity = newVariants.reduce(
+        (sum, variant) => sum + (Number(variant.quantity) || 0),
+        0
+      );
+      if (totalVariantsQuantity > newQuantity) {
+        return res.status(400).json({ error: "Total variants quantity cannot exceed product total quantity" });
+      }
+    }
+
+    const product = await Product.findByIdAndUpdate(id, updates, { new: true });
     res.status(200).json({ product });
   } catch (error) {
     res.status(500).json({ error: error.message });

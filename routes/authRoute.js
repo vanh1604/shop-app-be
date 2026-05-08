@@ -6,6 +6,7 @@ import {
   signIn,
   signUp,
   updateLocation,
+  updateUserProfile,
   verifyOtp,
   refreshAccessToken,
   logout,
@@ -24,5 +25,6 @@ authRouter.put("/api/users/:id", updateLocation);
 authRouter.get("/api/orders/:vendorId", getOrderByVendorId);
 authRouter.get("/api/users", getAllUsers);
 authRouter.get("/api/userInfo/:id", auth, getUserinformation);
-authRouter.delete("/api/users/:id", auth, deleteUser);
+authRouter.put("/api/userInfo/:id", auth, updateUserProfile);
+authRouter.delete("/api/users/:id", deleteUser);
 export default authRouter;
