@@ -24,10 +24,10 @@ orderRouter.get(
   "/api/orders/vendors/:vendorId",
   auth,
   vendorAuth,
-  getOrderByVendorId
+  getOrderByVendorId,
 );
-orderRouter.patch("/api/orders/:orderId/delivered", updateOrderById);
-orderRouter.patch("/api/orders/:orderId/processing", updateProccessById);
+orderRouter.patch("/api/orders/:orderId/delivered", auth, updateOrderById);
+orderRouter.patch("/api/orders/:orderId/processing", auth, updateProccessById);
 orderRouter.post("/api/orders/payment", auth, paymentApi);
 orderRouter.get("/api/orders/stripe/retrieve/:id", auth, stripeRetrieve);
 orderRouter.get("/api/orders", getAllOrders);

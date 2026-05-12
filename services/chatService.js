@@ -48,13 +48,16 @@ class ChatService {
 
           let output;
           try {
+            console.log(`Tool call: ${name} with args:`, args);
             output = await this._runTool(name, args);
+            console.log(`Tool output length/type:`, Array.isArray(output) ? output.length : typeof output);
             if (Array.isArray(output)) {
               collectedProducts.push(...output);
             } else if (output && typeof output === "object") {
               collectedProducts.push(output);
             }
           } catch (err) {
+            console.error(`Tool ${name} failed:`, err);
             output = { error: err.message };
           }
 

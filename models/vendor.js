@@ -6,6 +6,10 @@ const vendorSchema = mongoose.Schema({
     required: true,
     trim: true,
   },
+  number: {
+    type: String,
+    default: "",
+  },
   email: {
     type: String,
     required: true,

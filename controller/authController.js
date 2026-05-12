@@ -152,9 +152,9 @@ const updateLocation = async (req, res) => {
     const { province, district, ward, address } = req.body;
     const updatedUser = await User.findByIdAndUpdate(
       id,
-      { 
+      {
         $set: { province, district, ward, address },
-        $unset: { state: "", city: "", locality: "" } 
+        $unset: { state: "", city: "", locality: "" },
       },
       { new: true },
     );
@@ -170,15 +170,19 @@ const updateLocation = async (req, res) => {
 const updateUserProfile = async (req, res) => {
   try {
     const { id } = req.params;
-    const { fullName, province, district, ward, address } = req.body;
+    const { fullName, province, district, ward, address, number } = req.body;
 
     // Only update fields that are provided
-    const updateData = { $set: {}, $unset: { state: "", city: "", locality: "" } };
+    const updateData = {
+      $set: {},
+      $unset: { state: "", city: "", locality: "" },
+    };
     if (fullName !== undefined) updateData.$set.fullName = fullName;
     if (province !== undefined) updateData.$set.province = province;
     if (district !== undefined) updateData.$set.district = district;
     if (ward !== undefined) updateData.$set.ward = ward;
     if (address !== undefined) updateData.$set.address = address;
+    if (number !== undefined) updateData.$set.number = number;
 
     const updatedUser = await User.findByIdAndUpdate(id, updateData, {
       new: true,
