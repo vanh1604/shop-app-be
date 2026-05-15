@@ -172,6 +172,17 @@ const updateUserProfile = async (req, res) => {
     const { id } = req.params;
     const { fullName, province, district, ward, address, number } = req.body;
 
+    // Check if phone number is already in use by another user or vendor
+    if (number) {
+      const existingUser = await User.findOne({ number, _id: { $ne: id } });
+      const existingVendor = await Vendor.findOne({ number });
+      if (existingUser || existingVendor) {
+        return res
+          .status(400)
+          .json({ message: "Phone number already in use by another account" });
+      }
+    }
+
     // Only update fields that are provided
     const updateData = {
       $set: {},

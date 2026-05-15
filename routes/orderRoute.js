@@ -5,6 +5,7 @@ import {
   getAllOrders,
   getOrderByVendorId,
   getOrdersByBuyer,
+  getVendorStats,
   paymentApi,
   stripeRetrieve,
   updateOrderById,
@@ -25,6 +26,12 @@ orderRouter.get(
   auth,
   vendorAuth,
   getOrderByVendorId,
+);
+orderRouter.get(
+  "/api/orders/vendors/:vendorId/stats",
+  auth,
+  vendorAuth,
+  getVendorStats,
 );
 orderRouter.patch("/api/orders/:orderId/delivered", auth, updateOrderById);
 orderRouter.patch("/api/orders/:orderId/processing", auth, updateProccessById);

@@ -287,6 +287,70 @@ const stripeRetrieve = async (res, req) => {
   }
 };
 
+const getVendorStats = async (req, res) => {
+  const { vendorId } = req.params;
+  const { period = "month" } = req.query; // week, month, year
+
+  try {
+    const now = new Date();
+    let startDate;
+
+    if (period === "week") {
+      startDate = new Date(now.setDate(now.getDate() - 7));
+    } else if (period === "year") {
+      startDate = new Date(now.setFullYear(now.getFullYear() - 1));
+    } else {
+      // Default to month
+      startDate = new Date(now.setMonth(now.getMonth() - 1));
+    }
+
+    const stats = await Order.aggregate([
+      {
+        $match: {
+          vendorId: vendorId,
+          delivered: true,
+          orderedAt: { $gte: startDate },
+        },
+      },
+      {
+        $facet: {
+          productStats: [
+            {
+              $group: {
+                _id: "$productId",
+                productName: { $first: "$productName" },
+                image: { $first: "$image" },
+                totalQuantity: { $sum: "$quantity" },
+                totalRevenue: { $sum: { $multiply: ["$productPrice", "$quantity"] } },
+              },
+            },
+            { $sort: { totalQuantity: -1 } },
+          ],
+          revenueTrends: [
+            {
+              $group: {
+                _id: {
+                  $dateToString: {
+                    format: period === "year" ? "%Y-%m" : "%Y-%m-%d",
+                    date: "$orderedAt",
+                  },
+                },
+                revenue: { $sum: { $multiply: ["$productPrice", "$quantity"] } },
+                orderCount: { $sum: 1 },
+              },
+            },
+            { $sort: { _id: 1 } },
+          ],
+        },
+      },
+    ]);
+
+    res.status(200).json(stats[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export {
   createOrder,
   getOrdersByBuyer,
@@ -297,4 +361,5 @@ export {
   getAllOrders,
   paymentApi,
   stripeRetrieve,
+  getVendorStats,
 };
