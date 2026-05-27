@@ -237,7 +237,7 @@ const getAllOrders = async (req, res) => {
 
 const paymentApi = async (req, res) => {
   try {
-    const { orderId, currency = "usd", amount: bodyAmount } = req.body;
+    const { orderId, currency = "vnd", amount: bodyAmount } = req.body;
     
     let amount;
     if (bodyAmount) {
@@ -251,7 +251,7 @@ const paymentApi = async (req, res) => {
         return res.status(404).json({ message: "Order not found" });
       }
       const totalPrice = order.productPrice * order.quantity;
-      amount = Math.round(totalPrice * 100); // Convert to cents
+      amount = Math.round(totalPrice); // VND is zero-decimal, no need to multiply by 100
     }
 
     const stripe = new Stripe(process.env.STRIPE_KEY);
@@ -269,7 +269,7 @@ const paymentApi = async (req, res) => {
       message: "Payment intent created successfully",
       clientSecret: paymentIntent.client_secret,
       paymentIntent: paymentIntent.id,
-      amount: paymentIntent.amount / 100,
+      amount: paymentIntent.amount,
       currency: paymentIntent.currency,
     });
   } catch (error) {

@@ -101,8 +101,8 @@ const generateEmailBody = (content, title) => {
             ${content}
           </div>
           <div class="email-footer">
-            <p>&copy; ${new Date().getFullYear()} ${process.env.APP_NAME || "Our Store"}. All rights reserved.</p>
-            <p>If you have any questions, please contact us at ${process.env.EMAIL_FORM || "support@example.com"}</p>
+            <p>&copy; ${new Date().getFullYear()} ${process.env.APP_NAME || "Cửa hàng của chúng tôi"}. Bảo lưu mọi quyền.</p>
+            <p>Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi tại ${process.env.EMAIL_FORM || "support@example.com"}</p>
           </div>
         </div>
       </body>
@@ -112,18 +112,18 @@ const generateEmailBody = (content, title) => {
 
 const buildVerificationEmail = (username, otp) => {
   return {
-    subject: "Verify Your Email Address",
+    subject: "Xác minh địa chỉ email của bạn",
     content: `
-      <h2>Verify Your Email</h2>
-      <p>Hi ${username},</p>
-      <p>Please use the OTP below to complete your account verification.</p>
+      <h2>Xác minh Email</h2>
+      <p>Chào ${username},</p>
+      <p>Vui lòng sử dụng mã OTP dưới đây để hoàn tất việc xác minh tài khoản của bạn.</p>
       <div class="info-box">
-        <p><strong>Your OTP:</strong> ${otp}</p>
-        <p><strong>Expires in:</strong> 10 minutes</p>
+        <p><strong>Mã OTP của bạn:</strong> ${otp}</p>
+        <p><strong>Hết hạn trong:</strong> 10 phút</p>
       </div>
       <div class="divider"></div>
-      <p>Do not share this OTP with anyone.</p>
-      <p>If you did not create this account, you can ignore this email.</p>
+      <p>Không chia sẻ mã OTP này với bất kỳ ai.</p>
+      <p>Nếu bạn không tạo tài khoản này, bạn có thể bỏ qua email này.</p>
     `,
   };
 };

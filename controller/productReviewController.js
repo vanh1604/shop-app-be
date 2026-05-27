@@ -42,7 +42,12 @@ const createReviewProduct = async (req, res) => {
 
 const getProductReview = async (req, res) => {
   try {
-    const productReview = await ProductReview.find();
+    const { productId } = req.query;
+    let query = {};
+    if (productId) {
+      query.productId = productId;
+    }
+    const productReview = await ProductReview.find(query);
     res.status(200).json({ productReview });
   } catch (error) {
     res.status(500).json({ error: error.message });

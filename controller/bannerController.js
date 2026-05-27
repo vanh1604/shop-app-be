@@ -20,4 +20,17 @@ const getBanner = async (req, res) => {
     }
 };
 
-export { createBanner, getBanner };
+const deleteBanner = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const banner = await Banner.findByIdAndDelete(id);
+        if (!banner) {
+            return res.status(404).json({ message: "Banner not found" });
+        }
+        res.status(200).json({ message: "Banner deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+export { createBanner, getBanner, deleteBanner };

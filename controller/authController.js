@@ -237,18 +237,18 @@ const verifyOtp = async (req, res) => {
     const storedotpData = otpStore.get(email);
     if (!storedotpData) {
       return res.status(400).json({
-        message: "email not found",
+        message: "không tìm thấy email",
       });
     }
     if (storedotpData.otp !== parseInt(otp)) {
-      return res.status(400).json({ message: "Invalid OTP" });
+      return res.status(400).json({ message: "Mã OTP không hợp lệ" });
     }
     if (Date.now() > storedotpData.expiresAt) {
       await User.deleteOne({ email });
       otpStore.delete(email);
       return res
         .status(400)
-        .json({ message: "OTP expired, and your account deleted" });
+        .json({ message: "Mã OTP đã hết hạn, tài khoản của bạn đã bị xóa" });
     }
     const user = await User.findOneAndUpdate(
       { email },

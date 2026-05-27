@@ -52,14 +52,13 @@ export const OPENAI_TOOLS = [
             description: "Danh mục con (ví dụ: 'Áo thun', 'Áo sơ mi')",
           },
           minPrice: {
-            type: "number",
-            description: "Giá tối thiểu (USD)",
+              type: "number",
+              description: "Giá tối thiểu (VND)",
           },
           maxPrice: {
-            type: "number",
-            description: "Giá tối đa (USD)",
-          },
-          minRating: {
+              type: "number",
+              description: "Giá tối đa (VND)",
+          },          minRating: {
             type: "number",
             description: "Rating tối thiểu (0-5)",
           },
